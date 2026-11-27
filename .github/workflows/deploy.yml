@@ -37,6 +37,7 @@ jobs:
         run: |
           echo "<h3>Dang cap nhat, vui long quay lai sau it phut...</h3>" > app_offline.htm
           curl -sS -T app_offline.htm "ftp://$FTP_SERVER$APP_DIR" --user "$FTP_USERNAME:$FTP_PASSWORD"
+          sleep 20
 
       - name: Upload via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
