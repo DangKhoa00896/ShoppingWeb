@@ -1,0 +1,56 @@
+name: Deploy ShoppingWeb to Somee
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  FTP_SERVER: ${{ secrets.FTP_SERVER }}
+  FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+  FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+  APP_DIR: /www.dangkhoaltweb.somee.com/shop/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET (theo global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build & publish
+        run: dotnet publish ShoppingWeb.csproj -c Release -o publish
+
+      - name: Ghi connection string cho Somee
+        env:
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+        run: |
+          jq -n --arg cs "$DB_CONNECTION" \
+            '{ConnectionStrings:{DefaultConnection:$cs}}' \
+            > publish/appsettings.Production.json
+
+      - name: Tam tat app (app_offline.htm)
+        run: |
+          echo "<h3>Dang cap nhat, vui long quay lai sau it phut...</h3>" > app_offline.htm
+          curl -sS -T app_offline.htm "ftp://$FTP_SERVER$APP_DIR" --user "$FTP_USERNAME:$FTP_PASSWORD"
+
+      - name: Upload via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./publish/
+          server-dir: /www.dangkhoaltweb.somee.com/shop/
+
+      - name: Bat lai app
+        if: always()
+        run: |
+          curl -sS "ftp://$FTP_SERVER/" --user "$FTP_USERNAME:$FTP_PASSWORD" \
+            -Q "DELE ${APP_DIR}app_offline.htm"
