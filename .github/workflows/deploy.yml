@@ -53,5 +53,16 @@ jobs:
       - name: Bat lai app
         if: always()
         run: |
-          curl -sS "ftp://$FTP_SERVER/" --user "$FTP_USERNAME:$FTP_PASSWORD" \
-            -Q "DELE ${APP_DIR}app_offline.htm"
+          for i in 1 2 3 4 5 6; do
+            # Liệt kê thư mục app, nếu không còn app_offline.htm thì coi như xong
+            if ! curl -sS "ftp://$FTP_SERVER$APP_DIR" --user "$FTP_USERNAME:$FTP_PASSWORD" --list-only | grep -qi '^app_offline.htm$'; then
+              echo "app_offline.htm khong con tren server -> app dang chay."
+              exit 0
+            fi
+            echo "Lan $i: xoa app_offline.htm..."
+            curl -sS "ftp://$FTP_SERVER/" --user "$FTP_USERNAME:$FTP_PASSWORD" \
+              -Q "DELE ${APP_DIR}app_offline.htm" && exit 0
+            sleep 5
+          done
+          echo "::error::Khong xoa duoc app_offline.htm, hay xoa tay trong File manager."
+          exit 1
