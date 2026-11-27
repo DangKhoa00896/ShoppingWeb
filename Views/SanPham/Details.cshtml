@@ -1,0 +1,21 @@
+@model ShoppingWeb.Models.SanPham
+@{ ViewData["Title"] = "Chi tiết sản phẩm"; }
+
+<h1>Chi tiết sản phẩm</h1>
+<hr />
+<dl class="row">
+    <dt class="col-sm-2">Mã</dt>
+    <dd class="col-sm-10">@Model.Ma</dd>
+
+    <dt class="col-sm-2">Tên</dt>
+    <dd class="col-sm-10">@Model.Ten</dd>
+
+    <dt class="col-sm-2">Giá</dt>
+    <dd class="col-sm-10">@(Model.Gia?.ToString("N0")) đ</dd>
+
+    <dt class="col-sm-2">Danh mục</dt>
+    <dd class="col-sm-10">@Model.DanhMuc?.Ten</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Ma" class="btn btn-primary">Sửa</a>
+<a asp-action="Index" class="btn btn-secondary">Quay lại</a>
